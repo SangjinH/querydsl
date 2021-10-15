@@ -1,5 +1,15 @@
 # QueryDSL 공부하기
 
+>- 설정
+>
+>- 사용법
+>
+>  - [`Boolean Builer`](`Boolean Builder`)
+>
+>  - ##### [`Where절`](`Where 절`)
+>
+>  - [`QueryProjection`](QueryProjection)
+
 ## 1.설정
 
 `build.gradle` 폴더에 해당 부분들 추가. 
@@ -43,7 +53,7 @@ compileQuerydsl {
 
 
 
-### 	1. `Boolean Builder`
+### 	`Boolean Builder`
 
 ```java
     @Test
@@ -92,7 +102,7 @@ compileQuerydsl {
 
 
 
-### 	2. `Where 절`
+### 	`Where 절`
 
 ```java
 @Test
@@ -148,4 +158,51 @@ compileQuerydsl {
 - 단점
 
   - `Null` 체크를 잘 해줘야한다. 모든 메서드마다..!
+
+
+
+## QueryProjection
+
+> 일단 QueryProjection은 Dto에 적용하는 개념이다. 
+>
+> 예로는 
+>
+> ```java
+> @Data
+> public class MemberTeamDto {
+>     // columns ...
+>     
+>     @QueryProjection
+>     public MemberTeamDto(Long memberId, ...) {
+>         this.memberId = memberId;
+>         // ...
+>     }
+> }
+> ```
+>
+> 위 `@QueryProjection` 어노테이션을 달아주면 QueryFactory에서 바로 적용이 가능하다. 주의할 점은, 
+>
+> gradle에서 `compileQuerydsl` 을 실행시켜 `QMemberTeamDto` 를 만들고,
+>
+>  사용 `QueryFactory에서` 해당 `column과 이름을 맞춰줘야` 한다!
+
+- ### 실제 사용 Repository 
+
+```java
+public List<MemberTeamDto> searchByBuiler(){
+    // Boolean Builder로 여러 조건을 Binding 
+    return queryFactory
+        	.select(new QMemberTeamDto(
+                member.id.as("memberId"),
+                member.username,
+                member.age,				// QMember.member
+                team.id.as("teamId"),    // QTeam.team
+                team.name.as("teamName")
+            ))
+        	.from(member)
+        	.leftJoin(member.team, team)
+        	.where(builder)
+        	.fetch();
+}
+```
 
